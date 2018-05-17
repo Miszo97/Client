@@ -3,3 +3,23 @@
 //
 
 #include "Client.hpp"
+
+void Client::sendRequest() {
+
+}
+
+void Client::readResponse() {
+
+}
+
+void Client::displayError(QAbstractSocket::SocketError socketError) {
+
+}
+
+void Client::enableGetFortuneButton() {
+
+}
+
+void Client::sessionOpened() {
+
+}

@@ -13,13 +13,15 @@ set(CMAKE_AUTOMOC ON)
 find_package(Qt5Widgets REQUIRED)
 find_package(Qt5Core REQUIRED)
 find_package(Qt5Sql REQUIRED)
+find_package(Qt5Network REQUIRED)
 
 
 
-add_executable(Client main.cpp)
+
+add_executable(Client main.cpp Client.cpp Client.hpp)
 
 
 
-target_link_libraries(Client  Qt5::Widgets Qt5::Core Qt5::Sql)
+target_link_libraries(Client  Qt5::Widgets Qt5::Core Qt5::Sql Qt5::Network)
 
 

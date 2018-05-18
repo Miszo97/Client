@@ -1,0 +1,43 @@
+syntax = "proto2";
+
+package rrepro;
+
+message Event {
+  optional string text = 1;
+  optional int32 timestamp = 2;
+  enum Priority {
+    ONE = 0;
+    TWO = 1;
+    THREE = 2;
+  }
+  optional Priority priority = 3 [default = ONE];
+}
+
+message Request {
+
+  enum Kind {
+    GET = 0;
+    ADD = 1;
+  }
+
+  optional Kind kind = 2 [default = GET];
+
+
+  optional Event event = 3;
+
+
+}
+
+message Response {
+
+  enum Kind {
+    OK = 0;
+    BAD = 1;
+  }
+
+  optional Kind kind = 2 [default = BAD];
+
+
+  repeated Event events = 4;
+
+}

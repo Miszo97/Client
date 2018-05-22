@@ -17,6 +17,7 @@
 #include <QtGui/QGuiApplication>
 #include <QtWidgets/QGroupBox>
 #include <QtCore/QSettings>
+#include <QtNetwork/QNetworkConfigurationManager>
 
 Client::Client(QWidget* parent) : QDialog(parent), hostCombo(new QComboBox), portLineEdit(new QLineEdit)
                                   , getEventsButton(new QPushButton(tr("Get Events"))), connectToServerButton(
@@ -25,6 +26,9 @@ Client::Client(QWidget* parent) : QDialog(parent), hostCombo(new QComboBox), por
 
 
     add_loc_host_to_Combo();
+
+
+    //<editor-fold desc="GUI">
 
 
     portLineEdit->setValidator(new QIntValidator(1, 65535, this));
@@ -62,9 +66,12 @@ Client::Client(QWidget* parent) : QDialog(parent), hostCombo(new QComboBox), por
 
     setWindowTitle(QGuiApplication::applicationDisplayName());
     portLineEdit->setFocus();
+    //</editor-fold>
 
 
     connect(socket, QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error), this, &Client::displayError);
+    connect(socket, QOverload<QAbstractSocket::SocketState>::of(&QAbstractSocket::stateChanged), this,
+            &Client::displayState);
     connect(connectToServerButton, &QAbstractButton::clicked,
             this, &Client::connectToServer);
     connect(sendEventButton, &QAbstractButton::clicked,
@@ -77,8 +84,42 @@ Client::Client(QWidget* parent) : QDialog(parent), hostCombo(new QComboBox), por
 //            this, &Client::requestNewEvents);
     connect(quitButton, &QAbstractButton::clicked, this, &QWidget::close);
     connect(socket, &QIODevice::readyRead, this, &Client::readResponse);
-    connect(socket, QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error),
-            this, &Client::displayError);
+    connect(socket, &QAbstractSocket::stateChanged, this, []() { std::cout << "State change" << std::endl; });
+    connect(socket, &QAbstractSocket::connected, this, []() { std::cout << "Connected!" << std::endl; });
+
+
+    std::cout << "BEFORE manager.capabilities() & QNetworkConfigurationManager::NetworkSessionRequired" << std::endl;
+
+    QNetworkConfigurationManager manager;
+
+    std::cout << "manager.capabilities();" << manager.capabilities() << std::endl;
+    std::cout << "QNetworkConfigurationManager::NetworkSessionRequired;"
+              << QNetworkConfigurationManager::NetworkSessionRequired << std::endl;
+
+    if (manager.capabilities() & QNetworkConfigurationManager::NetworkSessionRequired) {
+        std::cout << "WORKS! manager.capabilities() & QNetworkConfigurationManager::NetworkSessionRequired"
+                  << std::endl;
+
+        // Get saved network configuration
+        QSettings settings(QSettings::UserScope, QLatin1String("QtProject"));
+        settings.beginGroup(QLatin1String("QtNetwork"));
+        const QString id = settings.value(QLatin1String("DefaultNetworkConfiguration")).toString();
+        settings.endGroup();
+
+        // If the saved network configuration is not currently discovered use the system default
+        QNetworkConfiguration config = manager.configurationFromIdentifier(id);
+        if ((config.state() & QNetworkConfiguration::Discovered) != QNetworkConfiguration::Discovered) {
+            config = manager.defaultConfiguration();
+        }
+
+        networkSession = new QNetworkSession(config, this);
+        connect(networkSession, &QNetworkSession::opened, this, &Client::sessionOpened);
+
+        getEventsButton->setEnabled(false);
+        statusLabel->setText(tr("Opening network session."));
+        networkSession->open();
+    }
+
 
 
 }
@@ -95,7 +136,7 @@ void Client::sendEvent() {
 
     std::string output;
     request.SerializeToString(&output);
-    std::cerr << "sendRequest with binary data: " << output;
+    std::cout << "sendRequest with binary data: " << output;
     socket->write(output.data());
 
 
@@ -118,6 +159,9 @@ void Client::readResponse() {
 }
 
 void Client::displayError(QAbstractSocket::SocketError socketError) {
+
+    std::cout << "Error occured!" << std::endl;
+
     switch (socketError) {
         case QAbstractSocket::RemoteHostClosedError:
             break;
@@ -145,6 +189,7 @@ void Client::enableGetEventsButton() {
 
 void Client::sessionOpened()
 {
+
     // Save the used configuration
     QNetworkConfiguration config = networkSession->configuration();
     QString id;
@@ -165,8 +210,12 @@ void Client::sessionOpened()
 }
 
 void Client::connectToServer() {
+
+    QHostAddress address;
+    address.setAddress("127.0.0.1");
+    std::cerr << "connectToServer" << std::endl;
     socket->abort();
-    socket->connectToHost(hostCombo->currentText(), portLineEdit->text().toInt());
+    socket->connectToHost(address, 4888);
 }
 
 void Client::add_loc_host_to_Combo() const {// find out name of this machine
@@ -179,6 +228,38 @@ void Client::add_loc_host_to_Combo() const {// find out name of this machine
     }
     if (name != QLatin1String("localhost"))
         hostCombo->addItem(QString("localhost"));
+}
+
+void Client::displayState(QAbstractSocket::SocketState socketState) {
+
+
+    switch (socketState) {
+        case QAbstractSocket::UnconnectedState    :
+            std::cout << "The socket is not connected." << std::endl;
+            break;
+        case QAbstractSocket::HostLookupState    :
+            std::cout << "The socket is performing a host name lookup." << std::endl;
+            break;
+        case QAbstractSocket::ConnectingState:
+            std::cout << "The socket has started establishing a connection." << std::endl;
+            break;
+        case QAbstractSocket::ConnectedState:
+            std::cout << "A connection is established." << std::endl;
+            break;
+        case QAbstractSocket::BoundState    :
+            std::cout << "The socket is bound to an address and port." << std::endl;
+            break;
+        case QAbstractSocket::ClosingState        :
+            std::cout << "The socket is about to close (data may still be waiting to be written)." << std::endl;
+            break;
+        case QAbstractSocket::ListeningState    :
+            std::cout << "For internal use only." << std::endl;
+            break;
+        default:;
+    }
+
+    getEventsButton->setEnabled(true);
+
 }
 
 

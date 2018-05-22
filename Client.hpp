@@ -9,13 +9,12 @@
 #include <QDataStream>
 #include <QDialog>
 #include <QTcpSocket>
+#include <QtWidgets/QComboBox>
+#include <QtWidgets/QLabel>
+#include <QtNetwork/QNetworkSession>
+#include "Request_Response.pb.h"
 
-class QComboBox;
-class QLabel;
-class QLineEdit;
-class QPushButton;
-class QTcpSocket;
-class QNetworkSession;
+
 
 class Client : public QDialog
 {
@@ -24,24 +23,38 @@ Q_OBJECT
 public:
     explicit Client(QWidget *parent = nullptr);
 
+
 private slots:
-    void sendRequest();
+
+    void sendEvent();
     void readResponse();
     void displayError(QAbstractSocket::SocketError socketError);
-    void enableGetFortuneButton();
+
+    void displayState(QAbstractSocket::SocketState socketState);
+
+    void enableGetEventsButton();
     void sessionOpened();
 
+    void connectToServer();
+
 private:
+
+
     QComboBox *hostCombo = nullptr;
     QLineEdit *portLineEdit = nullptr;
     QLabel *statusLabel = nullptr;
-    QPushButton *getFortuneButton = nullptr;
+    QPushButton* getEventsButton = nullptr;
+    QPushButton* sendEventButton = nullptr;
+    QPushButton* connectToServerButton = nullptr;
 
-    QTcpSocket *tcpSocket = nullptr;
+
+
     QDataStream in;
-    QString currentFortune;
+    QTcpSocket* socket = nullptr;
 
     QNetworkSession *networkSession = nullptr;
+
+    void add_loc_host_to_Combo() const;
 };
 
 

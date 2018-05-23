@@ -25,7 +25,6 @@ Client::Client(QWidget* parent) : QDialog(parent), hostCombo(new QComboBox), por
                 new QTcpSocket(this)) {
 
 
-    add_loc_host_to_Combo();
 
 
     //<editor-fold desc="GUI">
@@ -80,8 +79,8 @@ Client::Client(QWidget* parent) : QDialog(parent), hostCombo(new QComboBox), por
             this, &Client::enableGetEventsButton);
     connect(portLineEdit, &QLineEdit::textChanged,
             this, &Client::enableGetEventsButton);
-//    connect(, &QAbstractButton::clicked,
-//            this, &Client::requestNewEvents);
+    connect(getEventsButton, &QAbstractButton::clicked,
+            this, &Client::askForEvents);
     connect(quitButton, &QAbstractButton::clicked, this, &QWidget::close);
     connect(socket, &QIODevice::readyRead, this, &Client::readResponse);
     connect(socket, &QAbstractSocket::stateChanged, this, []() { std::cout << "State change" << std::endl; });
@@ -129,9 +128,12 @@ void Client::sendEvent() {
 
 
     rrepro::Request request;
-    rrepro::Event event;
-    event.set_text("sdfsf");
-    request.set_allocated_event(&event);
+    rrepro::Event* event = new rrepro::Event;
+    event->set_text("Some funny text.");
+    event->set_timestamp(12);
+    //event->set_priority TODO set the priority
+
+    request.set_allocated_event(event);
     request.set_kind(rrepro::Request::ADD);
 
     std::string output;
@@ -152,7 +154,7 @@ void Client::readResponse() {
     response.ParseFromArray(input, input.size());
 
 #ifdef degug_cerr
-    std::cerr<<"Code "<<response.kind();
+    std::cerr<<"Code "<<response.kind()<<std::endl;
 #endif
 
 
@@ -184,7 +186,7 @@ void Client::displayError(QAbstractSocket::SocketError socketError) {
 }
 
 void Client::enableGetEventsButton() {
-
+    getEventsButton->setEnabled(true);
 }
 
 void Client::sessionOpened()
@@ -209,6 +211,13 @@ void Client::sessionOpened()
     enableGetEventsButton();
 }
 
+
+/*!
+ * This function is slot invoked by connectToServerButton. It fetches PORT and IP
+ * to the remote server from GUI line edits and tries to connect to this server.
+ * Before it connects it aborts current connection if any exists.
+ * Finally it enables sendEventButton and getEventsButton buttons.
+ */
 void Client::connectToServer() {
 
     QHostAddress address;
@@ -216,19 +225,31 @@ void Client::connectToServer() {
     std::cerr << "connectToServer" << std::endl;
     socket->abort();
     socket->connectToHost(address, 4888);
+
+    enableGetEventsButton();
+    sendEventButton->setEnabled(true);
 }
 
-void Client::add_loc_host_to_Combo() const {// find out name of this machine
-    QString name = QHostInfo::localHostName();
-    if (!name.isEmpty()) {
-        hostCombo->addItem(name);
-        QString domain = QHostInfo::localDomainName();
-        if (!domain.isEmpty())
-            hostCombo->addItem(name + QChar('.') + domain);
-    }
-    if (name != QLatin1String("localhost"))
-        hostCombo->addItem(QString("localhost"));
+void Client::askForEvents() {
+
+    rrepro::Request request;
+
+    //Kind is GET to fetch all events.
+    request.set_kind(rrepro::Request::GET);
+
+    std::string output;
+    request.SerializeToString(&output);
+    std::cout << "sendRequest with binary data: " << output;
+    socket->write(output.data());
+
+    getEventsButton->setEnabled(false);
+
+
+
 }
+
+
+
 
 void Client::displayState(QAbstractSocket::SocketState socketState) {
 
@@ -258,10 +279,9 @@ void Client::displayState(QAbstractSocket::SocketState socketState) {
         default:;
     }
 
-    getEventsButton->setEnabled(true);
+
 
 }
-
 
 
 

@@ -27,15 +27,15 @@ public:
 private slots:
 
     void sendEvent();
+    void askForEvents();
     void readResponse();
-    void displayError(QAbstractSocket::SocketError socketError);
-
-    void displayState(QAbstractSocket::SocketState socketState);
-
     void enableGetEventsButton();
     void sessionOpened();
-
     void connectToServer();
+
+
+    void displayError(QAbstractSocket::SocketError socketError);
+    void displayState(QAbstractSocket::SocketState socketState);
 
 private:
 
@@ -43,6 +43,17 @@ private:
     QComboBox *hostCombo = nullptr;
     QLineEdit *portLineEdit = nullptr;
     QLabel *statusLabel = nullptr;
+
+    /*!
+     * Push buttons allowing user to invoke essential slots.
+     *
+     *  Button name  | Second Header
+     *  ------------- | -------------
+     *  getEventsButton  | void askForEvents();
+     *  sendEventButton  | void sendEvent();
+     *  connectToServerButton | void connectToServer();
+     *
+     */
     QPushButton* getEventsButton = nullptr;
     QPushButton* sendEventButton = nullptr;
     QPushButton* connectToServerButton = nullptr;
@@ -54,7 +65,6 @@ private:
 
     QNetworkSession *networkSession = nullptr;
 
-    void add_loc_host_to_Combo() const;
 };
 
 

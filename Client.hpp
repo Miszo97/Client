@@ -12,6 +12,7 @@
 #include <QtWidgets/QComboBox>
 #include <QtWidgets/QLabel>
 #include <QtNetwork/QNetworkSession>
+#include <QtWidgets/QPlainTextEdit>
 #include "Request_Response.pb.h"
 
 
@@ -43,6 +44,8 @@ private:
     QComboBox *hostCombo = nullptr;
     QLineEdit *portLineEdit = nullptr;
     QLabel *statusLabel = nullptr;
+    QPlainTextEdit* event_des_PlainTextEdit = nullptr;
+
 
     /*!
      * Push buttons allowing user to invoke essential slots.

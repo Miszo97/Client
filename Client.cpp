@@ -21,7 +21,7 @@
 
 Client::Client(QWidget* parent) : QDialog(parent), hostCombo(new QComboBox), portLineEdit(new QLineEdit)
                                   , getEventsButton(new QPushButton(tr("Get Events"))), connectToServerButton(
-                new QPushButton(tr("Connect to server"))), sendEventButton(new QPushButton(tr("Send Event"))), socket(
+                new QPushButton(tr("Connect to server"))), sendEventButton(new QPushButton(tr("Send Event"))), event_des_PlainTextEdit(new QPlainTextEdit), socket(
                 new QTcpSocket(this)) {
 
 
@@ -55,6 +55,7 @@ Client::Client(QWidget* parent) : QDialog(parent), hostCombo(new QComboBox), por
     QGridLayout* mainLayout = nullptr;
 
     mainLayout = new QGridLayout(this);
+    event_des_PlainTextEdit->setWindowTitle("Event description");
 
     mainLayout->addWidget(hostLabel, 0, 0);
     mainLayout->addWidget(hostCombo, 0, 1);

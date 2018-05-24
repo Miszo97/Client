@@ -30,9 +30,9 @@ private slots:
     void sendEvent();
     void askForEvents();
     void readResponse();
-    void enableGetEventsButton();
     void sessionOpened();
     void connectToServer();
+    void connection_established();
 
 
     void displayError(QAbstractSocket::SocketError socketError);
@@ -41,7 +41,7 @@ private slots:
 private:
 
 
-    QComboBox *hostCombo = nullptr;
+    QLineEdit *hostLineEdit = nullptr;
     QLineEdit *portLineEdit = nullptr;
     QLabel *statusLabel = nullptr;
     QPlainTextEdit* event_des_PlainTextEdit = nullptr;
@@ -50,19 +50,20 @@ private:
     /*!
      * Push buttons allowing user to invoke essential slots.
      *
-     *  Button name  | Second Header
-     *  ------------- | -------------
-     *  getEventsButton  | void askForEvents();
-     *  sendEventButton  | void sendEvent();
+     *  Button name           | Second Header
+     *  -------------         | -------------
+     *  getEventsButton       | void askForEvents();
+     *  sendEventButton       | void sendEvent();
      *  connectToServerButton | void connectToServer();
-     *
+     *  quitButton            | Widget::close()
      */
     QPushButton* getEventsButton = nullptr;
     QPushButton* sendEventButton = nullptr;
     QPushButton* connectToServerButton = nullptr;
+    QPushButton* quitButton = nullptr;
 
 
-
+    std::multimap<rrepro::Event_Priority, rrepro::Event> events;
     QDataStream in;
     QTcpSocket* socket = nullptr;
 

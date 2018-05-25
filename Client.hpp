@@ -24,15 +24,26 @@ Q_OBJECT
 public:
     explicit Client(QWidget *parent = nullptr);
 
+    void sendEvent(const rrepro::Event&);
+    void sendEvent(rrepro::Event&&);
+
+    void connectToServer(QHostAddress, int);
+
+
+
+
 
 private slots:
 
-    void sendEvent();
+
+    void onSendEvent();
+    void onConnectToServer();
+
     void askForEvents();
     void readResponse();
     void sessionOpened();
-    void connectToServer();
     void connection_established();
+
 
 
     void displayError(QAbstractSocket::SocketError socketError);
@@ -50,11 +61,11 @@ private:
     /*!
      * Push buttons allowing user to invoke essential slots.
      *
-     *  Button name           | Second Header
+     *  Button name           | Slot name
      *  -------------         | -------------
      *  getEventsButton       | void askForEvents();
      *  sendEventButton       | void sendEvent();
-     *  connectToServerButton | void connectToServer();
+     *  connectToServerButton | void onConnectToServer();
      *  quitButton            | Widget::close()
      */
     QPushButton* getEventsButton = nullptr;
@@ -66,8 +77,10 @@ private:
     std::multimap<rrepro::Event_Priority, rrepro::Event> events;
     QDataStream in;
     QTcpSocket* socket = nullptr;
-
     QNetworkSession *networkSession = nullptr;
+    void setUpGUI();
+    void setSigSlots();
+    void setUpNetConf();
 
 };
 

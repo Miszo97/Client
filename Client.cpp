@@ -20,137 +20,84 @@
 #include <QtNetwork/QNetworkConfigurationManager>
 
 
-Client::Client(QWidget* parent) : QDialog(parent), hostLineEdit(new QLineEdit), portLineEdit(new QLineEdit)
-                                  , getEventsButton(new QPushButton(tr("Get Events"))), connectToServerButton(
-                new QPushButton(tr("Connect to server"))), sendEventButton(new QPushButton(tr("Send Event"))), event_des_PlainTextEdit(new QPlainTextEdit), socket(
-                new QTcpSocket(this)) {
+Client::Client(QWidget* parent) : QDialog(parent),
+        connectToServerButton(new QPushButton(tr("Connect to server"))),
+        getEventsButton(new QPushButton(tr("Get Events"))),
+        sendEventButton(new QPushButton(tr("Send Event"))),
+        event_des_PlainTextEdit(new QPlainTextEdit),
+        hostLineEdit(new QLineEdit),
+        portLineEdit(new QLineEdit),
+        socket(new QTcpSocket(this)),
+        in(nullptr)
+
+{
 
 
-
-
-    //<editor-fold desc="GUI">
-
-
-    portLineEdit->setValidator(new QIntValidator(1, 65535, this));
-    portLineEdit->setPlaceholderText("4888");
-    hostLineEdit->setPlaceholderText("127.0.0.1");
-
-    auto hostLabel = new QLabel(tr("&Server name:"));
-    hostLabel->setBuddy(hostLineEdit);
-    auto portLabel = new QLabel(tr("S&erver port:"));
-    portLabel->setBuddy(portLineEdit);
-
-    statusLabel = new QLabel(tr("Make sure you are connected to the server. "));
-
-    getEventsButton->setDefault(true);
-    getEventsButton->setEnabled(false);
-    sendEventButton->setEnabled(false);
-
-    quitButton = new QPushButton(tr("Quit"));
-
-    auto buttonBox = new QDialogButtonBox;
-    buttonBox->addButton(getEventsButton, QDialogButtonBox::ActionRole);
-    buttonBox->addButton(sendEventButton, QDialogButtonBox::ActionRole);
-    buttonBox->addButton(connectToServerButton, QDialogButtonBox::ActionRole);
-
-
-    buttonBox->addButton(quitButton, QDialogButtonBox::RejectRole);
-    QGridLayout* mainLayout = nullptr;
-
-    mainLayout = new QGridLayout(this);
-    event_des_PlainTextEdit->setWindowTitle("Event description");
-
-    mainLayout->addWidget(hostLabel, 0, 0);
-    mainLayout->addWidget(hostLineEdit, 0, 1);
-    mainLayout->addWidget(portLabel, 1, 0);
-    mainLayout->addWidget(portLineEdit, 1, 1);
-    mainLayout->addWidget(statusLabel, 2, 0, 1, 2);
-    mainLayout->addWidget(event_des_PlainTextEdit, 2, 0, 1, 3);
-    mainLayout->addWidget(buttonBox, 3, 0, 1, 2);
-
-    setWindowTitle(QGuiApplication::applicationDisplayName());
-    portLineEdit->setFocus();
-    //</editor-fold>
-
-
-    connect(socket                , QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error)        , this , &Client::displayError);
-    connect(socket                , QOverload<QAbstractSocket::SocketState>::of(&QAbstractSocket::stateChanged) , this , &Client::displayState);
-    connect(socket                , &QIODevice::readyRead                                                       , this , &Client::readResponse);
-    connect(socket                , &QAbstractSocket::stateChanged                                              , this , []() { std::cout << "State change" << std::endl; });
-    connect(socket                , &QAbstractSocket::connected                                                 , this , &Client::connection_established);
-    connect(connectToServerButton , &QAbstractButton::clicked                                                   , this , &Client::connectToServer);
-    connect(sendEventButton       , &QAbstractButton::clicked                                                   , this , &Client::sendEvent);
-    connect(getEventsButton       , &QAbstractButton::clicked                                                   , this , &Client::askForEvents);
-    connect(quitButton            , &QAbstractButton::clicked                                                   , this , &QWidget::close);
-
-
-
-    QNetworkConfigurationManager manager;
-    if (manager.capabilities() & QNetworkConfigurationManager::NetworkSessionRequired) {
-
-        // Get saved network configuration
-        QSettings settings(QSettings::UserScope, QLatin1String("QtProject"));
-        settings.beginGroup(QLatin1String("QtNetwork"));
-        const QString id = settings.value(QLatin1String("DefaultNetworkConfiguration")).toString();
-        settings.endGroup();
-
-        // If the saved network configuration is not currently discovered use the system default
-        QNetworkConfiguration config = manager.configurationFromIdentifier(id);
-        if ((config.state() & QNetworkConfiguration::Discovered) != QNetworkConfiguration::Discovered) {
-            config = manager.defaultConfiguration();
-        }
-
-        networkSession = new QNetworkSession(config, this);
-        connect(networkSession, &QNetworkSession::opened, this, &Client::sessionOpened);
-
-        getEventsButton->setEnabled(false);
-        statusLabel->setText(tr("Opening network session."));
-        networkSession->open();
-    }
-
+    setSigSlots();
+    setUpGUI();
+    setUpNetConf();
 
 
 }
 
 
-void Client::sendEvent() {
-
+void Client::sendEvent(const rrepro::Event& event) {
 
     rrepro::Request request;
-    rrepro::Event* event = new rrepro::Event;
-    event->set_text("Some funny text.");
-    event->set_timestamp(12);
-    //event->set_priority TODO set the priority
 
-    request.set_allocated_event(event);
+    *request.mutable_event() = event;
     request.set_kind(rrepro::Request::ADD);
 
     std::string output;
     request.SerializeToString(&output);
+
+    std::cout<<"Serialized message is:"<< output;
+    std::cout<<"Size of output is: "<< output.size() <<std::endl;
     std::cout << "sendRequest with binary data: " << output;
     socket->write(output.data());
 
+}
+
+void Client::sendEvent(rrepro::Event&& event) {
+
+    rrepro::Request request;
+
+    *request.mutable_event() = event;
+    request.set_kind(rrepro::Request::ADD);
+
+    std::string output;
+    request.SerializeToString(&output);
+
+    std::cout<<"Serialized message is:"<< output;
+    std::cout<<"Size of output is: "<< output.size() <<std::endl;
+    std::cout << "sendRequest with binary data: " << output;
+    socket->write(output.data());
 
 }
 
 void Client::readResponse() {
 
+
+ QByteArray data;
+ data = socket->readAll();
+
+ std::cout<< "data is here: "<< data.data() <<std::endl;
+ std::cout<< "End!\n" <<std::endl;
+
+
     rrepro::Response response;
 
 
-    QByteArray input = socket->readAll();
-
-    response.ParseFromArray(input, input.size());
-
-    auto e = response.events();
-
-    for (auto&& item : e) {
-        std::cout<< item.text() <<std::endl;
-        std::cout<< item.timestamp() <<std::endl;
-        //priority
-    }
-
-
+//    bool f = response.ParseFromArray(response_byte, response_byte.size());
+//    std::cout << f << std::endl;
+//    auto e = response.events();
+//    std::cout << e.size() << std::endl;
+//    for (auto&& item : e) {
+//        std::cout << "Item text: " << item.text() << std::endl;
+//        std::cout << "Item timestamp: " << item.timestamp() << std::endl;
+//        //priority
+//    }
+//    std::cout << "End of displaying fetched data..." << std::endl;
 }
 
 void Client::displayError(QAbstractSocket::SocketError socketError) {
@@ -162,24 +109,22 @@ void Client::displayError(QAbstractSocket::SocketError socketError) {
             break;
         case QAbstractSocket::HostNotFoundError:
             QMessageBox::information(this, tr("Events Client"), tr("The host was not found. Please check the "
-                                                                    "host name and port settings."));
+                                                                   "host name and port settings."));
             break;
         case QAbstractSocket::ConnectionRefusedError:
             QMessageBox::information(this, tr("Events Client"), tr("The connection was refused by the peer. "
-                                                                    "Make sure the Events server is running, "
-                                                                    "and check that the host name and port "
-                                                                    "settings are correct."));
+                                                                   "Make sure the Events server is running, "
+                                                                   "and check that the host name and port "
+                                                                   "settings are correct."));
             break;
         default:
             QMessageBox::information(this, tr("Events Client"),
                                      tr("The following error occurred: %1.").arg(socket->errorString()));
     }
 
-    getEventsButton->setEnabled(true);
 }
 
-void Client::sessionOpened()
-{
+void Client::sessionOpened() {
 
     // Save the used configuration
     QNetworkConfiguration config = networkSession->configuration();
@@ -200,21 +145,12 @@ void Client::sessionOpened()
 }
 
 
-/*!
- * This function is slot invoked by connectToServerButton. It fetches PORT and IP
- * to the remote server from GUI line edits and tries to connect to this server.
- * Before it connects it aborts current connection if any exists.
- * Finally it enables sendEventButton and getEventsButton buttons.
- */
-void Client::connectToServer() {
 
-    std::cerr << "connectToServer" << std::endl;
+void Client::connectToServer(QHostAddress address, int port) {
 
-    QHostAddress address;
-    address.setAddress(hostLineEdit->placeholderText());
-    auto port = portLineEdit->placeholderText().toInt();
     socket->abort();
     socket->connectToHost(address, port); //TODO time out support.
+
 
 
 }
@@ -233,11 +169,7 @@ void Client::askForEvents() {
 
     getEventsButton->setEnabled(false);
 
-
-
 }
-
-
 
 
 void Client::displayState(QAbstractSocket::SocketState socketState) {
@@ -268,17 +200,141 @@ void Client::displayState(QAbstractSocket::SocketState socketState) {
         default:;
     }
 
-
-
 }
 
 void Client::connection_established() {
 
-    std::cout<< "Connection was established!" <<std::endl;
+    std::cout << "Connection was established!" << std::endl;
     getEventsButton->setEnabled(true);
     sendEventButton->setEnabled(true);
 
 }
+void Client::setUpGUI() {
+
+    portLineEdit->setValidator(new QIntValidator(1, 65535, this));
+    portLineEdit->setPlaceholderText("4888");
+    hostLineEdit->setPlaceholderText("127.0.0.1");
+
+    auto hostLabel = new QLabel(tr("&Server name:"));
+    hostLabel->setBuddy(hostLineEdit);
+    auto portLabel = new QLabel(tr("S&erver port:"));
+    portLabel->setBuddy(portLineEdit);
+
+    statusLabel = new QLabel(tr("Make sure you are connected to the server. "));
+
+    getEventsButton->setDefault(true);
+    getEventsButton->setEnabled(false);
+    sendEventButton->setEnabled(false);
+
+    quitButton = new QPushButton(tr("Quit"));
+
+    auto buttonBox = new QDialogButtonBox;
+    buttonBox->addButton(getEventsButton, QDialogButtonBox::ActionRole);
+    buttonBox->addButton(connectToServerButton, QDialogButtonBox::ActionRole);
+
+    auto buttonBox2 = new QDialogButtonBox;
+    buttonBox2->addButton(sendEventButton, QDialogButtonBox::ActionRole);
+
+
+    buttonBox->addButton(quitButton, QDialogButtonBox::RejectRole);
+    QGridLayout* mainLayout = nullptr;
+
+    QGridLayout* event_creat_layout = nullptr;
+    QGridLayout* connect_server_layout = nullptr;
+
+    mainLayout = new QGridLayout(this);
+    connect_server_layout = new QGridLayout(this);
+    event_creat_layout = new QGridLayout(this);
+
+    event_creat_layout->addWidget(buttonBox2, 1, 0);
+    event_creat_layout->addWidget(event_des_PlainTextEdit, 0, 0);
+
+    event_des_PlainTextEdit->setWindowTitle("Event description");
+
+    connect_server_layout->addWidget(hostLabel, 0, 0);
+    connect_server_layout->addWidget(hostLineEdit, 0, 1);
+    connect_server_layout->addWidget(portLabel, 1, 0);
+    connect_server_layout->addWidget(portLineEdit, 1, 1);
+    //connect_server_layout->addWidget(statusLabel, 2, 0, 1, 2); //TODO find a place to statusLable.
+    connect_server_layout->addWidget(buttonBox, 3, 0, 1, 2);
+
+
+    mainLayout->addLayout(event_creat_layout, 0, 1);
+    mainLayout->addLayout(connect_server_layout, 0, 0);
+
+    setWindowTitle(QGuiApplication::applicationDisplayName());
+    portLineEdit->setFocus();
+
+}
+void Client::setSigSlots() {
+
+    connect(socket                , QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error)        , this , &Client::displayError);
+    connect(socket                , QOverload<QAbstractSocket::SocketState>::of(&QAbstractSocket::stateChanged) , this , &Client::displayState);
+    connect(socket                , &QIODevice::readyRead                                                       , this , &Client::readResponse);
+    connect(socket                , &QAbstractSocket::stateChanged                                              , this , []() { std::cout << "State change" << std::endl; });
+    connect(socket                , &QAbstractSocket::connected                                                 , this , &Client::connection_established);
+    connect(connectToServerButton , &QAbstractButton::clicked                                                   , this , &Client::onConnectToServer);
+    connect(sendEventButton       , &QAbstractButton::clicked                                                   , this , &Client::onSendEvent);
+    connect(getEventsButton       , &QAbstractButton::clicked                                                   , this , &Client::askForEvents);
+    connect(quitButton            , &QAbstractButton::clicked                                                   , this , &QWidget::close);
+
+}
+void Client::setUpNetConf() {
+
+    QNetworkConfigurationManager manager;
+    if (manager.capabilities() & QNetworkConfigurationManager::NetworkSessionRequired) {
+
+        // Get saved network configuration
+        QSettings settings(QSettings::UserScope, QLatin1String("QtProject"));
+        settings.beginGroup(QLatin1String("QtNetwork"));
+        const QString id = settings.value(QLatin1String("DefaultNetworkConfiguration")).toString();
+        settings.endGroup();
+
+        // If the saved network configuration is not currently discovered use the system default
+        QNetworkConfiguration config = manager.configurationFromIdentifier(id);
+        if ((config.state() & QNetworkConfiguration::Discovered) != QNetworkConfiguration::Discovered) {
+            config = manager.defaultConfiguration();
+        }
+
+        networkSession = new QNetworkSession(config, this);
+        connect(networkSession, &QNetworkSession::opened, this, &Client::sessionOpened);
+
+        getEventsButton->setEnabled(false);
+        statusLabel->setText(tr("Opening network session."));
+        networkSession->open();
+    }
+
+}
+void Client::onSendEvent() {
+
+    rrepro::Event event;
+    event.set_text("Some funny text.");
+    event.set_timestamp(12);
+    //event->set_priority TODO set the priority
+
+    sendEvent(std::move(event));
+
+}
+
+/*!
+ * This function is slot invoked by connectToServerButton. It fetches PORT and IP
+ * to the remote server from GUI line edits and tries to connect to this server.
+ * Before it connects it aborts current connection if any exists.
+ * Finally it enables sendEventButton and getEventsButton buttons.
+ */
+void Client::onConnectToServer() {
+
+    std::cerr << "connectToServer" << std::endl;
+
+    QHostAddress address;
+    address.setAddress(hostLineEdit->placeholderText());
+    auto port = portLineEdit->placeholderText().toInt();
+
+    connectToServer(address, port);
+
+
+}
+
 
 
 

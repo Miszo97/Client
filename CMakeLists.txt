@@ -3,7 +3,7 @@ project(Client)
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_BUILD_TYPE "Debug")
-set (CMAKE_CXX_FLAGS "-Ddebug_cerr -lprotobuf")
+set (CMAKE_CXX_FLAGS "-DDEBUG_MODE -lprotobuf")
 
 set(CMAKE_AUTOMOC ON)
 

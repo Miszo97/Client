@@ -46,9 +46,17 @@ private slots:
     void onConnected();
 
 
-
+    /*!
+     * /brief Auxilary function to display possible errors affecting given tcp socket.
+     */
     void displayError(QAbstractSocket::SocketError socketError);
+
+    /*!
+ * /brief Auxilary function to display states in which tcpSocket can be.
+ */
+#ifdef DEBUG_MODE
     void displayState(QAbstractSocket::SocketState socketState);
+#endif
 
 private:
 

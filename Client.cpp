@@ -21,26 +21,17 @@
 #include <iomanip>
 
 
-
-Client::Client(QWidget* parent) : QDialog(parent),
-        connectToServerButton(new QPushButton(tr("Connect to server"))),
-        getEventsButton(new QPushButton(tr("Get Events"))),
-        sendEventButton(new QPushButton(tr("Send Event"))),
-        event_des_PlainTextEdit(new QPlainTextEdit),
-        events_table(new QTableWidget),
-        hostLineEdit(new QLineEdit),
-        portLineEdit(new QLineEdit),
-        socket(new QTcpSocket(this))
-
-
-{
+Client::Client(QWidget* parent) : QDialog(parent), connectToServerButton(new QPushButton(tr("Connect to server")))
+                                  , getEventsButton(new QPushButton(tr("Get Events"))), sendEventButton(
+                new QPushButton(tr("Send Event"))), event_des_PlainTextEdit(new QPlainTextEdit), events_table(
+                new QTableWidget), hostLineEdit(new QLineEdit), portLineEdit(new QLineEdit), socket(
+                new QTcpSocket(this)) {
 
     in.setDevice(socket);
 
     setSigSlots();
     setUpGUI();
     setUpNetConf();
-
 
 }
 
@@ -55,9 +46,11 @@ void Client::sendEvent(const rrepro::Event& event) {
     std::string output;
     request.SerializeToString(&output);
 
-    std::cout<<"Serialized message is:"<< output;
-    std::cout<<"Size of output is: "<< output.size() <<std::endl;
+#ifdef DEBUG_MODE
+    std::cout << "Serialized message is:" << output;
+    std::cout << "Size of output is: " << output.size() << std::endl;
     std::cout << "sendRequest with binary data: " << output;
+#endif
     socket->write(output.data());
 
 }
@@ -72,10 +65,11 @@ void Client::sendEvent(rrepro::Event&& event) {
     std::string output;
     request.SerializeToString(&output);
 
-    std::cout<<"Serialized message is:"<< output;
-    std::cout<<"Size of output is: "<< output.size() <<std::endl;
+#ifdef DEBUG_MODE
+    std::cout << "Serialized message is:" << output;
+    std::cout << "Size of output is: " << output.size() << std::endl;
     std::cout << "sendRequest with binary data: " << output;
-
+#endif
 
 
     socket->write(output.data());
@@ -84,20 +78,18 @@ void Client::sendEvent(rrepro::Event&& event) {
 
 void Client::readResponse() {
 
-    std::cout<< "Reading data..." <<std::endl;
+    std::cout << "Reading data..." << std::endl;
 
     in.startTransaction();
 
-     QByteArray data;
-     data = socket->readAll();
-
+    QByteArray data;
+    data = socket->readAll();
 
 
     rrepro::Response response;
 
 
-   response.ParseFromArray(data, data.size());
-
+    response.ParseFromArray(data, data.size());
 
 
     auto e = response.events();
@@ -108,24 +100,31 @@ void Client::readResponse() {
     std::cout << e.size() << std::endl;
     for (auto&& item : e) {
 
+#ifdef DEBUG_MODE
         std::cout << "Item text: " << item.text() << std::endl;
         std::cout << "Item timestamp: " << item.timestamp() << std::endl;
+#endif
 
         //this pointer will be freed on event_table destruction.
-        QTableWidgetItem *text = new QTableWidgetItem(tr("%1").arg(QString::fromStdString(item.text())));
+        QTableWidgetItem* text = new QTableWidgetItem(tr("%1").arg(QString::fromStdString(item.text())));
         events_table->setItem(counter, 0, text);
-        QTableWidgetItem *timestamp = new QTableWidgetItem(tr("%1").arg(QString(item.timestamp())));
+        QTableWidgetItem* timestamp = new QTableWidgetItem(tr("%1").arg(QString(item.timestamp())));
         events_table->setItem(counter, 1, timestamp);
         //priority
 
         ++counter;
     }
+#ifdef DEBUG_MODE
     std::cout << "End of displaying fetched response_byte..." << std::endl;
+#endif
 }
 
+#ifdef DEBUG_MODE
 void Client::displayError(QAbstractSocket::SocketError socketError) {
 
+#ifdef DEBUG_MODE
     std::cout << "Error occured!" << std::endl;
+#endif
 
     switch (socketError) {
         case QAbstractSocket::RemoteHostClosedError:
@@ -146,6 +145,7 @@ void Client::displayError(QAbstractSocket::SocketError socketError) {
     }
 
 }
+#endif
 
 void Client::sessionOpened() {
 
@@ -161,7 +161,6 @@ void Client::sessionOpened() {
     settings.beginGroup(QLatin1String("QtNetwork"));
     settings.setValue(QLatin1String("DefaultNetworkConfiguration"), id);
     settings.endGroup();
-
 
 }
 
@@ -197,6 +196,13 @@ void Client::askForEvents() {
 }
 
 
+#ifdef DEBUG_MODE
+/*!
+ * Auxiliary function to displays all possible states in which a given tcp socket is.
+ * This function uses QAbstractSocket::SocketState enum class to identify state which affected
+ * the tcp socket. Displaying information about the current state is handled by qInfo() object.
+ *
+ */
 void Client::displayState(QAbstractSocket::SocketState socketState) {
 
 
@@ -226,6 +232,7 @@ void Client::displayState(QAbstractSocket::SocketState socketState) {
     }
 
 }
+#endif
 
 
 /*!
@@ -278,7 +285,7 @@ void Client::setUpGUI() {
 
     QGridLayout* event_creat_layout = nullptr;
     QGridLayout* connect_server_layout = nullptr;
-    QGridLayout* event_table_layout= nullptr;
+    QGridLayout* event_table_layout = nullptr;
 
 
     mainLayout = new QGridLayout(this);
@@ -315,15 +322,18 @@ void Client::setUpGUI() {
 }
 void Client::setSigSlots() {
 
-    connect(socket                , QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error)        , this , &Client::displayError);
-    connect(socket                , QOverload<QAbstractSocket::SocketState>::of(&QAbstractSocket::stateChanged) , this , &Client::displayState);
-    connect(socket                , &QIODevice::readyRead                                                       , this , &Client::readResponse);
-    connect(socket                , &QAbstractSocket::stateChanged                                              , this , []() { std::cout << "State change" << std::endl; });
-    connect(socket                , &QAbstractSocket::connected                                                 , this , &Client::onConnected);
-    connect(connectToServerButton , &QAbstractButton::clicked                                                   , this , &Client::onConnectToServer);
-    connect(sendEventButton       , &QAbstractButton::clicked                                                   , this , &Client::onSendEvent);
-    connect(getEventsButton       , &QAbstractButton::clicked                                                   , this , &Client::askForEvents);
-    connect(quitButton            , &QAbstractButton::clicked                                                   , this , &QWidget::close);
+    connect(socket, QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error), this, &Client::displayError);
+#ifdef DEBUG_MODE
+    connect(socket, QOverload<QAbstractSocket::SocketState>::of(&QAbstractSocket::stateChanged), this,
+            &Client::displayState);
+#endif
+    connect(socket, &QIODevice::readyRead, this, &Client::readResponse);
+    connect(socket, &QAbstractSocket::stateChanged, this, []() { std::cout << "State change" << std::endl; });
+    connect(socket, &QAbstractSocket::connected, this, &Client::onConnected);
+    connect(connectToServerButton, &QAbstractButton::clicked, this, &Client::onConnectToServer);
+    connect(sendEventButton, &QAbstractButton::clicked, this, &Client::onSendEvent);
+    connect(getEventsButton, &QAbstractButton::clicked, this, &Client::askForEvents);
+    connect(quitButton, &QAbstractButton::clicked, this, &QWidget::close);
 
 }
 void Client::setUpNetConf() {
@@ -358,14 +368,14 @@ void Client::onSendEvent() {
     event.set_text(event_des_PlainTextEdit->toPlainText().toStdString());
     time_t time;
     event.set_timestamp(time);
-    //event->set_priority TODO set the priority
+    //event.Prio
 
     //add to table
-    QTableWidgetItem *text = new QTableWidgetItem(tr("%1").arg(QString::fromStdString(event.text())));
-    QTableWidgetItem *timestamp = new QTableWidgetItem(tr("%1").arg(QString(event.timestamp())));
+    QTableWidgetItem* text = new QTableWidgetItem(tr("%1").arg(QString::fromStdString(event.text())));
+    QTableWidgetItem* timestamp = new QTableWidgetItem(tr("%1").arg(QString(event.timestamp())));
 
     int rowCount = events_table->rowCount();
-    std::cout<< "Row count is: "<< rowCount <<std::endl;
+    std::cout << "Row count is: " << rowCount << std::endl;
 
     events_table->setItem(rowCount, 0, text);
     events_table->setItem(rowCount, 1, timestamp);
@@ -383,14 +393,15 @@ void Client::onSendEvent() {
  */
 void Client::onConnectToServer() {
 
-    std::cerr << "connectToServer" << std::endl;
+#ifdef DEBUG_MODE
+    std::cerr << "onConnectToServer()" << std::endl;
+#endif
 
     QHostAddress address;
     address.setAddress(hostLineEdit->placeholderText());
     auto port = portLineEdit->placeholderText().toInt();
 
     connectToServer(address, port);
-
 
 }
 

@@ -18,6 +18,8 @@
 #include <QtWidgets/QGroupBox>
 #include <QtCore/QSettings>
 #include <QtNetwork/QNetworkConfigurationManager>
+#include <iomanip>
+
 
 
 Client::Client(QWidget* parent) : QDialog(parent),
@@ -25,13 +27,15 @@ Client::Client(QWidget* parent) : QDialog(parent),
         getEventsButton(new QPushButton(tr("Get Events"))),
         sendEventButton(new QPushButton(tr("Send Event"))),
         event_des_PlainTextEdit(new QPlainTextEdit),
+        events_table(new QTableWidget),
         hostLineEdit(new QLineEdit),
         portLineEdit(new QLineEdit),
-        socket(new QTcpSocket(this)),
-        in(nullptr)
+        socket(new QTcpSocket(this))
+
 
 {
 
+    in.setDevice(socket);
 
     setSigSlots();
     setUpGUI();
@@ -71,33 +75,52 @@ void Client::sendEvent(rrepro::Event&& event) {
     std::cout<<"Serialized message is:"<< output;
     std::cout<<"Size of output is: "<< output.size() <<std::endl;
     std::cout << "sendRequest with binary data: " << output;
+
+
+
     socket->write(output.data());
 
 }
 
 void Client::readResponse() {
 
+    std::cout<< "Reading data..." <<std::endl;
 
- QByteArray data;
- data = socket->readAll();
+    in.startTransaction();
 
- std::cout<< "data is here: "<< data.data() <<std::endl;
- std::cout<< "End!\n" <<std::endl;
+     QByteArray data;
+     data = socket->readAll();
+
 
 
     rrepro::Response response;
 
 
-//    bool f = response.ParseFromArray(response_byte, response_byte.size());
-//    std::cout << f << std::endl;
-//    auto e = response.events();
-//    std::cout << e.size() << std::endl;
-//    for (auto&& item : e) {
-//        std::cout << "Item text: " << item.text() << std::endl;
-//        std::cout << "Item timestamp: " << item.timestamp() << std::endl;
-//        //priority
-//    }
-//    std::cout << "End of displaying fetched data..." << std::endl;
+   response.ParseFromArray(data, data.size());
+
+
+
+    auto e = response.events();
+
+    unsigned counter{};
+
+
+    std::cout << e.size() << std::endl;
+    for (auto&& item : e) {
+
+        std::cout << "Item text: " << item.text() << std::endl;
+        std::cout << "Item timestamp: " << item.timestamp() << std::endl;
+
+        //this pointer will be freed on event_table destruction.
+        QTableWidgetItem *text = new QTableWidgetItem(tr("%1").arg(QString::fromStdString(item.text())));
+        events_table->setItem(counter, 0, text);
+        QTableWidgetItem *timestamp = new QTableWidgetItem(tr("%1").arg(QString(item.timestamp())));
+        events_table->setItem(counter, 1, timestamp);
+        //priority
+
+        ++counter;
+    }
+    std::cout << "End of displaying fetched response_byte..." << std::endl;
 }
 
 void Client::displayError(QAbstractSocket::SocketError socketError) {
@@ -139,13 +162,15 @@ void Client::sessionOpened() {
     settings.setValue(QLatin1String("DefaultNetworkConfiguration"), id);
     settings.endGroup();
 
-    statusLabel->setText(tr("This examples requires that you run the "
-                            "Fortune Server example as well."));
 
 }
 
 
-
+/*!
+ * This function tries to connect to the host with given address and port.
+ * Before it connects it aborts current connection if any exists.
+ *
+ */
 void Client::connectToServer(QHostAddress address, int port) {
 
     socket->abort();
@@ -202,13 +227,25 @@ void Client::displayState(QAbstractSocket::SocketState socketState) {
 
 }
 
-void Client::connection_established() {
+
+/*!
+ * This slot is invoked whenever &QAbstractSocket::connected signal is emitted.
+ * It enables sendEventButton and getEventsButton buttons.
+ */
+void Client::onConnected() {
 
     std::cout << "Connection was established!" << std::endl;
     getEventsButton->setEnabled(true);
     sendEventButton->setEnabled(true);
 
 }
+
+/*!
+ * This function serves to set UP all gui widgets in user interface.
+ * It sets validation in portLineEdit so it could fit port format.
+ * It sets QLabels next to host and port line edits.
+ * It creates appropriate layouts to lay out all visible widgets.
+ */
 void Client::setUpGUI() {
 
     portLineEdit->setValidator(new QIntValidator(1, 65535, this));
@@ -241,10 +278,19 @@ void Client::setUpGUI() {
 
     QGridLayout* event_creat_layout = nullptr;
     QGridLayout* connect_server_layout = nullptr;
+    QGridLayout* event_table_layout= nullptr;
+
 
     mainLayout = new QGridLayout(this);
     connect_server_layout = new QGridLayout(this);
     event_creat_layout = new QGridLayout(this);
+    event_table_layout = new QGridLayout(this);
+
+
+    events_table->setRowCount(10);
+    events_table->setColumnCount(4);
+
+    event_table_layout->addWidget(events_table);
 
     event_creat_layout->addWidget(buttonBox2, 1, 0);
     event_creat_layout->addWidget(event_des_PlainTextEdit, 0, 0);
@@ -261,6 +307,7 @@ void Client::setUpGUI() {
 
     mainLayout->addLayout(event_creat_layout, 0, 1);
     mainLayout->addLayout(connect_server_layout, 0, 0);
+    mainLayout->addLayout(event_table_layout, 0, 2);
 
     setWindowTitle(QGuiApplication::applicationDisplayName());
     portLineEdit->setFocus();
@@ -272,7 +319,7 @@ void Client::setSigSlots() {
     connect(socket                , QOverload<QAbstractSocket::SocketState>::of(&QAbstractSocket::stateChanged) , this , &Client::displayState);
     connect(socket                , &QIODevice::readyRead                                                       , this , &Client::readResponse);
     connect(socket                , &QAbstractSocket::stateChanged                                              , this , []() { std::cout << "State change" << std::endl; });
-    connect(socket                , &QAbstractSocket::connected                                                 , this , &Client::connection_established);
+    connect(socket                , &QAbstractSocket::connected                                                 , this , &Client::onConnected);
     connect(connectToServerButton , &QAbstractButton::clicked                                                   , this , &Client::onConnectToServer);
     connect(sendEventButton       , &QAbstractButton::clicked                                                   , this , &Client::onSendEvent);
     connect(getEventsButton       , &QAbstractButton::clicked                                                   , this , &Client::askForEvents);
@@ -308,9 +355,21 @@ void Client::setUpNetConf() {
 void Client::onSendEvent() {
 
     rrepro::Event event;
-    event.set_text("Some funny text.");
-    event.set_timestamp(12);
+    event.set_text(event_des_PlainTextEdit->toPlainText().toStdString());
+    time_t time;
+    event.set_timestamp(time);
     //event->set_priority TODO set the priority
+
+    //add to table
+    QTableWidgetItem *text = new QTableWidgetItem(tr("%1").arg(QString::fromStdString(event.text())));
+    QTableWidgetItem *timestamp = new QTableWidgetItem(tr("%1").arg(QString(event.timestamp())));
+
+    int rowCount = events_table->rowCount();
+    std::cout<< "Row count is: "<< rowCount <<std::endl;
+
+    events_table->setItem(rowCount, 0, text);
+    events_table->setItem(rowCount, 1, timestamp);
+    events_table->update();
 
     sendEvent(std::move(event));
 

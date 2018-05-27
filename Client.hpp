@@ -13,6 +13,7 @@
 #include <QtWidgets/QLabel>
 #include <QtNetwork/QNetworkSession>
 #include <QtWidgets/QPlainTextEdit>
+#include <QTableWidget>
 #include "Request_Response.pb.h"
 
 
@@ -42,7 +43,7 @@ private slots:
     void askForEvents();
     void readResponse();
     void sessionOpened();
-    void connection_established();
+    void onConnected();
 
 
 
@@ -56,6 +57,7 @@ private:
     QLineEdit *portLineEdit = nullptr;
     QLabel *statusLabel = nullptr;
     QPlainTextEdit* event_des_PlainTextEdit = nullptr;
+    QTableWidget* events_table = nullptr;
 
 
     /*!
@@ -64,8 +66,8 @@ private:
      *  Button name           | Slot name
      *  -------------         | -------------
      *  getEventsButton       | void askForEvents();
-     *  sendEventButton       | void sendEvent();
-     *  connectToServerButton | void onConnectToServer();
+     *  sendEventButton       | void onSendEvent();
+     *  connectToServerButton | void onConnected();
      *  quitButton            | Widget::close()
      */
     QPushButton* getEventsButton = nullptr;
@@ -78,9 +80,11 @@ private:
     QDataStream in;
     QTcpSocket* socket = nullptr;
     QNetworkSession *networkSession = nullptr;
-    void setUpGUI();
-    void setSigSlots();
-    void setUpNetConf();
+
+    /// \brief This function serves to set UP all gui widgets in user interface.
+    inline void setUpGUI();
+    inline void setSigSlots();
+    inline void setUpNetConf();
 
 };
 

@@ -24,7 +24,7 @@
 Client::Client(QWidget* parent) : QDialog(parent), connectToServerButton(new QPushButton(tr("Connect to server")))
                                   , getEventsButton(new QPushButton(tr("Get Events"))), sendEventButton(
                 new QPushButton(tr("Send Event"))), event_des_PlainTextEdit(new QPlainTextEdit), events_table(
-                new QTableWidget), hostLineEdit(new QLineEdit), portLineEdit(new QLineEdit), socket(
+                new QTableWidget), hostLineEdit(new QLineEdit), portLineEdit(new QLineEdit), connected(false), socket(
                 new QTcpSocket(this)) {
 
     in.setDevice(socket);
@@ -264,6 +264,8 @@ void Client::onConnected() {
     getEventsButton->setEnabled(true);
     sendEventButton->setEnabled(true);
 
+    connected = true;
+
 }
 
 /*!
@@ -442,7 +444,7 @@ void Client::onConnectToServer() {
  */
 bool Client::isConnectedToServer() {
 
-    return socket->isOpen();
+    return connected;
 }
 
 /*!

@@ -43,7 +43,7 @@ Client::Client(QWidget* parent) : QDialog(parent), connectToServerButton(new QPu
 void Client::sendEvent(const rrepro::Event& event) {
 
     //If Client is not connected return.
-    if(!isConnectedToServer())
+    if (!isConnectedToServer())
         return;
 
     rrepro::Request request;
@@ -61,7 +61,6 @@ void Client::sendEvent(const rrepro::Event& event) {
 #endif
     socket->write(output.data());
     ++sent_events;
-
 
 }
 
@@ -195,8 +194,8 @@ void Client::connectToServer(QHostAddress address, int port) {
 
 
 /*!
- * This slot create and appropriately set request instance.
- * The it serializes the request and sends it with QIODevice::write.
+ * This slot creates and appropriately sets request instance.
+ * Then it serializes the request and sends it with QIODevice::write.
  * Finally it enables getEventsButton.
  */
 void Client::askForEvents() {
@@ -347,18 +346,17 @@ void Client::setUpGUI() {
  */
 void Client::setSigSlots() {
 
-    connect(socket, QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error), this, &Client::displayError);
-#ifdef DEBUG_MODE
-    connect(socket, QOverload<QAbstractSocket::SocketState>::of(&QAbstractSocket::stateChanged), this,
-            &Client::displayState);
-#endif
-    connect(socket, &QIODevice::readyRead, this, &Client::readResponse);
-    connect(socket, &QAbstractSocket::stateChanged, this, []() { std::cout << "State change" << std::endl; });
-    connect(socket, &QAbstractSocket::connected, this, &Client::onConnected);
-    connect(connectToServerButton, &QAbstractButton::clicked, this, &Client::onConnectToServer);
-    connect(sendEventButton, &QAbstractButton::clicked, this, &Client::onSendEvent);
-    connect(getEventsButton, &QAbstractButton::clicked, this, &Client::askForEvents);
-    connect(quitButton, &QAbstractButton::clicked, this, &QWidget::close);
+    #ifdef DEBUG_MODE
+    connect(socket                , QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error)        , this , &Client::displayError);
+    connect(socket                , QOverload<QAbstractSocket::SocketState>::of(&QAbstractSocket::stateChanged) , this , &Client::displayState);
+    #endif
+    connect(socket                , &QIODevice::readyRead                                                       , this , &Client::readResponse);
+    connect(socket                , &QAbstractSocket::stateChanged                                              , this , []() { std::cout << "State change" << std::endl; });
+    connect(socket                , &QAbstractSocket::connected                                                 , this , &Client::onConnected);
+    connect(connectToServerButton , &QAbstractButton::clicked                                                   , this , &Client::onConnectToServer);
+    connect(sendEventButton       , &QAbstractButton::clicked                                                   , this , &Client::onSendEvent);
+    connect(getEventsButton       , &QAbstractButton::clicked                                                   , this , &Client::askForEvents);
+    connect(quitButton            , &QAbstractButton::clicked                                                   , this , &QWidget::close);
 
 }
 
@@ -443,6 +441,7 @@ void Client::onConnectToServer() {
  * @return True or false depending on actual state of underlying socket.
  */
 bool Client::isConnectedToServer() {
+
     return socket->isOpen();
 }
 

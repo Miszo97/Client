@@ -35,8 +35,16 @@ Client::Client(QWidget* parent) : QDialog(parent), connectToServerButton(new QPu
 
 }
 
-
+/*!
+ * This function creates Request of ADD kind which stores passed event.
+ * It writes serialized Request to underlying socket and increments sent_events counter.
+ * @param event Event to be sent.
+ */
 void Client::sendEvent(const rrepro::Event& event) {
+
+    //If Client is not connected return.
+    if(!isConnectedToServer())
+        return;
 
     rrepro::Request request;
 
@@ -52,6 +60,8 @@ void Client::sendEvent(const rrepro::Event& event) {
     std::cout << "sendRequest with binary data: " << output;
 #endif
     socket->write(output.data());
+    ++sent_events;
+
 
 }
 
@@ -73,14 +83,18 @@ void Client::sendEvent(rrepro::Event&& event) {
 
 
     socket->write(output.data());
+    ++sent_events;
 
 }
 
+/*!
+ * This function slot read all arrivied data and parse it.
+ * It expects new events from server so it will populate events_table with them.
+ */
 void Client::readResponse() {
 
     std::cout << "Reading data..." << std::endl;
 
-    in.startTransaction();
 
     QByteArray data;
     data = socket->readAll();
@@ -102,14 +116,11 @@ void Client::readResponse() {
 
 #ifdef DEBUG_MODE
         std::cout << "Item text: " << item.text() << std::endl;
-        std::cout << "Item timestamp: " << item.timestamp() << std::endl;
 #endif
 
         //this pointer will be freed on event_table destruction.
         QTableWidgetItem* text = new QTableWidgetItem(tr("%1").arg(QString::fromStdString(item.text())));
         events_table->setItem(counter, 0, text);
-        QTableWidgetItem* timestamp = new QTableWidgetItem(tr("%1").arg(QString(item.timestamp())));
-        events_table->setItem(counter, 1, timestamp);
         //priority
 
         ++counter;
@@ -147,6 +158,9 @@ void Client::displayError(QAbstractSocket::SocketError socketError) {
 }
 #endif
 
+/*!
+ * This function saves the used network configuration so it could be used later on
+ */
 void Client::sessionOpened() {
 
     // Save the used configuration
@@ -179,6 +193,12 @@ void Client::connectToServer(QHostAddress address, int port) {
 
 }
 
+
+/*!
+ * This slot create and appropriately set request instance.
+ * The it serializes the request and sends it with QIODevice::write.
+ * Finally it enables getEventsButton.
+ */
 void Client::askForEvents() {
 
     rrepro::Request request;
@@ -289,9 +309,9 @@ void Client::setUpGUI() {
 
 
     mainLayout = new QGridLayout(this);
-    connect_server_layout = new QGridLayout(this);
-    event_creat_layout = new QGridLayout(this);
-    event_table_layout = new QGridLayout(this);
+    connect_server_layout = new QGridLayout;
+    event_creat_layout = new QGridLayout;
+    event_table_layout = new QGridLayout;
 
 
     events_table->setRowCount(10);
@@ -320,6 +340,11 @@ void Client::setUpGUI() {
     portLineEdit->setFocus();
 
 }
+
+/*!
+ * \brief This auxiliary function connects necessary signal and slots.
+ * It connects underlying socket, and all buttons from user graphic inteface.
+ */
 void Client::setSigSlots() {
 
     connect(socket, QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error), this, &Client::displayError);
@@ -336,6 +361,10 @@ void Client::setSigSlots() {
     connect(quitButton, &QAbstractButton::clicked, this, &QWidget::close);
 
 }
+
+/*!
+ * \brief Set up all necessary network configuration from last saved session.
+ */
 void Client::setUpNetConf() {
 
     QNetworkConfigurationManager manager;
@@ -362,23 +391,27 @@ void Client::setUpNetConf() {
     }
 
 }
+
+/*!
+ * \brief This slot is called when sendEventButton is clicked.
+ * It's task is to get all important data from GUI like IP address or PORT number
+ * so it could sent to sendEvent function. It also add new created event to events table.
+ */
 void Client::onSendEvent() {
 
     rrepro::Event event;
     event.set_text(event_des_PlainTextEdit->toPlainText().toStdString());
-    time_t time;
-    event.set_timestamp(time);
     //event.Prio
 
     //add to table
     QTableWidgetItem* text = new QTableWidgetItem(tr("%1").arg(QString::fromStdString(event.text())));
-    QTableWidgetItem* timestamp = new QTableWidgetItem(tr("%1").arg(QString(event.timestamp())));
-
     int rowCount = events_table->rowCount();
+
+#ifdef DEBUG_MODE
     std::cout << "Row count is: " << rowCount << std::endl;
+#endif
 
     events_table->setItem(rowCount, 0, text);
-    events_table->setItem(rowCount, 1, timestamp);
     events_table->update();
 
     sendEvent(std::move(event));
@@ -403,6 +436,23 @@ void Client::onConnectToServer() {
 
     connectToServer(address, port);
 
+}
+
+/*!
+ * \brief This function tells us wheter a client is connected to a server.
+ * @return True or false depending on actual state of underlying socket.
+ */
+bool Client::isConnectedToServer() {
+    return socket->isOpen();
+}
+
+/*!
+ * \brief Returns the current amount of sent events.
+ * @return Amount of sent events.
+ */
+size_t Client::sentEventsCount() {
+
+    return sent_events;
 }
 
 

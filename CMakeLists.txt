@@ -6,6 +6,7 @@ set(CMAKE_BUILD_TYPE "Debug")
 set (CMAKE_CXX_FLAGS "-DDEBUG_MODE -lprotobuf")
 
 set(CMAKE_AUTOMOC ON)
+set(CMAKE_PREFIX_PATH "/usr/local/Cellar/qt/5.11.0/")
 
 include_directories(/usr/local/boost_1_67_0/)
 

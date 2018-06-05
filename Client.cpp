@@ -21,8 +21,9 @@
 #include <iomanip>
 
 
-Client::Client(QWidget* parent) : QDialog(parent), connectToServerButton(new QPushButton(tr("Connect to server")))
-                                  , getEventsButton(new QPushButton(tr("Get Events"))), sendEventButton(
+Client::Client(QWidget* parent) : QDialog(parent), connectToServerButton(new QPushButton(tr("Connect to server"))),
+                quitButton(new QPushButton(tr("Quit"))),
+                getEventsButton(new QPushButton(tr("Get Events"))), sendEventButton(
                 new QPushButton(tr("Send Event"))), event_des_PlainTextEdit(new QPlainTextEdit), events_table(
                 new QTableWidget), hostLineEdit(new QLineEdit), portLineEdit(new QLineEdit), connected(false), socket(
                 new QTcpSocket(this)) {
@@ -119,6 +120,7 @@ void Client::readResponse() {
 
         //this pointer will be freed on event_table destruction.
         QTableWidgetItem* text = new QTableWidgetItem(tr("%1").arg(QString::fromStdString(item.text())));
+        events_table->setRowCount(events_table->rowCount()+1);
         events_table->setItem(counter, 0, text);
         //priority
 
@@ -291,11 +293,11 @@ void Client::setUpGUI() {
     getEventsButton->setEnabled(false);
     sendEventButton->setEnabled(false);
 
-    quitButton = new QPushButton(tr("Quit"));
 
     auto buttonBox = new QDialogButtonBox;
     buttonBox->addButton(getEventsButton, QDialogButtonBox::ActionRole);
     buttonBox->addButton(connectToServerButton, QDialogButtonBox::ActionRole);
+    buttonBox->addButton(quitButton, QDialogButtonBox::ActionRole);
 
     auto buttonBox2 = new QDialogButtonBox;
     buttonBox2->addButton(sendEventButton, QDialogButtonBox::ActionRole);
@@ -315,8 +317,8 @@ void Client::setUpGUI() {
     event_table_layout = new QGridLayout;
 
 
-    events_table->setRowCount(10);
-    events_table->setColumnCount(4);
+    events_table->setRowCount(0);
+    events_table->setColumnCount(1);
 
     event_table_layout->addWidget(events_table);
 
@@ -411,6 +413,7 @@ void Client::onSendEvent() {
     std::cout << "Row count is: " << rowCount << std::endl;
 #endif
 
+    events_table->setRowCount(events_table->rowCount()+1);
     events_table->setItem(rowCount, 0, text);
     events_table->update();
 

@@ -118,6 +118,7 @@ private:
     inline void setUpNetConf();
 
     size_t sent_events = {};
+    bool connected;
 
 };
 

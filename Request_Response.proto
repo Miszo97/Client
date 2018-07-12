@@ -4,13 +4,6 @@ package rrepro;
 
 message Event {
   optional string text = 1;
-  optional int32 timestamp = 2;
-  enum Priority {
-    ONE = 0;
-    TWO = 1;
-    THREE = 2;
-  }
-  optional Priority priority = 3 [default = ONE];
 }
 
 message Request {
@@ -35,7 +28,7 @@ message Response {
     BAD = 1;
   }
 
-  optional Kind kind = 2 [default = BAD];
+  optional Kind kind = 2 [default = OK];
 
 
   repeated Event events = 4;

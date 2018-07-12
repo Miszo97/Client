@@ -84,6 +84,10 @@ private slots:
 private:
 
 
+    QDialog* con_to_server = nullptr;
+
+
+
     QLineEdit *hostLineEdit = nullptr;
     QLineEdit *portLineEdit = nullptr;
     QLabel *statusLabel = nullptr;
@@ -101,14 +105,13 @@ private:
      *  connectToServerButton | void onConnected();
      *  quitButton            | Widget::close()
      */
+
     QPushButton* getEventsButton = nullptr;
     QPushButton* sendEventButton = nullptr;
     QPushButton* connectToServerButton = nullptr;
     QPushButton* quitButton = nullptr;
 
 
-    std::multimap<rrepro::Event_Priority, rrepro::Event> events;
-    QDataStream in;
     QTcpSocket* socket = nullptr;
     QNetworkSession *networkSession = nullptr;
 

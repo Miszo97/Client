@@ -103,7 +103,7 @@ void InitDefaultsResponse() {
 }
 
 ::google::protobuf::Metadata file_level_metadata[3];
-const ::google::protobuf::EnumDescriptor* file_level_enum_descriptors[3];
+const ::google::protobuf::EnumDescriptor* file_level_enum_descriptors[2];
 
 const ::google::protobuf::uint32 TableStruct::offsets[] GOOGLE_PROTOBUF_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::rrepro::Event, _has_bits_),
@@ -112,9 +112,7 @@ const ::google::protobuf::uint32 TableStruct::offsets[] GOOGLE_PROTOBUF_ATTRIBUT
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::rrepro::Event, text_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::rrepro::Event, timestamp_),
   0,
-  1,
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::rrepro::Request, _has_bits_),
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::rrepro::Request, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -135,9 +133,9 @@ const ::google::protobuf::uint32 TableStruct::offsets[] GOOGLE_PROTOBUF_ATTRIBUT
   ~0u,
 };
 static const ::google::protobuf::internal::MigrationSchema schemas[] GOOGLE_PROTOBUF_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
-  { 0, 7, sizeof(::rrepro::Event)},
-  { 9, 16, sizeof(::rrepro::Request)},
-  { 18, 25, sizeof(::rrepro::Response)},
+  { 0, 6, sizeof(::rrepro::Event)},
+  { 7, 14, sizeof(::rrepro::Request)},
+  { 16, 23, sizeof(::rrepro::Response)},
 };
 
 static ::google::protobuf::Message const * const file_default_instances[] = {
@@ -168,18 +166,16 @@ void protobuf_RegisterTypes(const ::std::string&) {
 void AddDescriptorsImpl() {
   InitDefaults();
   static const char descriptor[] GOOGLE_PROTOBUF_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
-      "\n\026Request_Response.proto\022\006rrepro\"Q\n\005Even"
-      "t\022\014\n\004text\030\001 \001(\t\022\021\n\ttimestamp\030\002 \001(\005\"\'\n\010Pr"
-      "iority\022\007\n\003ONE\020\000\022\007\n\003TWO\020\001\022\t\n\005THREE\020\002\"j\n\007R"
-      "equest\022\'\n\004kind\030\002 \001(\0162\024.rrepro.Request.Ki"
-      "nd:\003GET\022\034\n\005event\030\003 \001(\0132\r.rrepro.Event\"\030\n"
-      "\004Kind\022\007\n\003GET\020\000\022\007\n\003ADD\020\001\"l\n\010Response\022(\n\004k"
-      "ind\030\002 \001(\0162\025.rrepro.Response.Kind:\003BAD\022\035\n"
-      "\006events\030\004 \003(\0132\r.rrepro.Event\"\027\n\004Kind\022\006\n\002"
-      "OK\020\000\022\007\n\003BAD\020\001"
+      "\n\026Request_Response.proto\022\006rrepro\"\025\n\005Even"
+      "t\022\014\n\004text\030\001 \001(\t\"j\n\007Request\022\'\n\004kind\030\002 \001(\016"
+      "2\024.rrepro.Request.Kind:\003GET\022\034\n\005event\030\003 \001"
+      "(\0132\r.rrepro.Event\"\030\n\004Kind\022\007\n\003GET\020\000\022\007\n\003AD"
+      "D\020\001\"k\n\010Response\022\'\n\004kind\030\002 \001(\0162\025.rrepro.R"
+      "esponse.Kind:\002OK\022\035\n\006events\030\004 \003(\0132\r.rrepr"
+      "o.Event\"\027\n\004Kind\022\006\n\002OK\020\000\022\007\n\003BAD\020\001"
   };
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-      descriptor, 333);
+      descriptor, 272);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "Request_Response.proto", &protobuf_RegisterTypes);
 }
@@ -196,32 +192,9 @@ struct StaticDescriptorInitializer {
 } static_descriptor_initializer;
 }  // namespace protobuf_Request_5fResponse_2eproto
 namespace rrepro {
-const ::google::protobuf::EnumDescriptor* Event_Priority_descriptor() {
-  protobuf_Request_5fResponse_2eproto::protobuf_AssignDescriptorsOnce();
-  return protobuf_Request_5fResponse_2eproto::file_level_enum_descriptors[0];
-}
-bool Event_Priority_IsValid(int value) {
-  switch (value) {
-    case 0:
-    case 1:
-    case 2:
-      return true;
-    default:
-      return false;
-  }
-}
-
-#if !defined(_MSC_VER) || _MSC_VER >= 1900
-const Event_Priority Event::ONE;
-const Event_Priority Event::TWO;
-const Event_Priority Event::THREE;
-const Event_Priority Event::Priority_MIN;
-const Event_Priority Event::Priority_MAX;
-const int Event::Priority_ARRAYSIZE;
-#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 const ::google::protobuf::EnumDescriptor* Request_Kind_descriptor() {
   protobuf_Request_5fResponse_2eproto::protobuf_AssignDescriptorsOnce();
-  return protobuf_Request_5fResponse_2eproto::file_level_enum_descriptors[1];
+  return protobuf_Request_5fResponse_2eproto::file_level_enum_descriptors[0];
 }
 bool Request_Kind_IsValid(int value) {
   switch (value) {
@@ -242,7 +215,7 @@ const int Request::Kind_ARRAYSIZE;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 const ::google::protobuf::EnumDescriptor* Response_Kind_descriptor() {
   protobuf_Request_5fResponse_2eproto::protobuf_AssignDescriptorsOnce();
-  return protobuf_Request_5fResponse_2eproto::file_level_enum_descriptors[2];
+  return protobuf_Request_5fResponse_2eproto::file_level_enum_descriptors[1];
 }
 bool Response_Kind_IsValid(int value) {
   switch (value) {
@@ -268,7 +241,6 @@ void Event::InitAsDefaultInstance() {
 }
 #if !defined(_MSC_VER) || _MSC_VER >= 1900
 const int Event::kTextFieldNumber;
-const int Event::kTimestampFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 Event::Event()
@@ -289,14 +261,12 @@ Event::Event(const Event& from)
   if (from.has_text()) {
     text_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.text_);
   }
-  timestamp_ = from.timestamp_;
   // @@protoc_insertion_point(copy_constructor:rrepro.Event)
 }
 
 void Event::SharedCtor() {
   _cached_size_ = 0;
   text_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  timestamp_ = 0;
 }
 
 Event::~Event() {
@@ -342,7 +312,6 @@ void Event::Clear() {
     GOOGLE_DCHECK(!text_.IsDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited()));
     (*text_.UnsafeRawStringPointer())->clear();
   }
-  timestamp_ = 0;
   _has_bits_.Clear();
   _internal_metadata_.Clear();
 }
@@ -367,20 +336,6 @@ bool Event::MergePartialFromCodedStream(
             this->text().data(), static_cast<int>(this->text().length()),
             ::google::protobuf::internal::WireFormat::PARSE,
             "rrepro.Event.text");
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
-      // optional int32 timestamp = 2;
-      case 2: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(16u /* 16 & 0xFF */)) {
-          set_has_timestamp();
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
-                 input, &timestamp_)));
         } else {
           goto handle_unusual;
         }
@@ -424,11 +379,6 @@ void Event::SerializeWithCachedSizes(
       1, this->text(), output);
   }
 
-  // optional int32 timestamp = 2;
-  if (cached_has_bits & 0x00000002u) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt32(2, this->timestamp(), output);
-  }
-
   if (_internal_metadata_.have_unknown_fields()) {
     ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
         _internal_metadata_.unknown_fields(), output);
@@ -455,11 +405,6 @@ void Event::SerializeWithCachedSizes(
         1, this->text(), target);
   }
 
-  // optional int32 timestamp = 2;
-  if (cached_has_bits & 0x00000002u) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(2, this->timestamp(), target);
-  }
-
   if (_internal_metadata_.have_unknown_fields()) {
     target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
         _internal_metadata_.unknown_fields(), target);
@@ -477,22 +422,13 @@ size_t Event::ByteSizeLong() const {
       ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
         _internal_metadata_.unknown_fields());
   }
-  if (_has_bits_[0 / 32] & 3u) {
-    // optional string text = 1;
-    if (has_text()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::StringSize(
-          this->text());
-    }
-
-    // optional int32 timestamp = 2;
-    if (has_timestamp()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::Int32Size(
-          this->timestamp());
-    }
-
+  // optional string text = 1;
+  if (has_text()) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::StringSize(
+        this->text());
   }
+
   int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
   GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
   _cached_size_ = cached_size;
@@ -522,16 +458,9 @@ void Event::MergeFrom(const Event& from) {
   ::google::protobuf::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
-  cached_has_bits = from._has_bits_[0];
-  if (cached_has_bits & 3u) {
-    if (cached_has_bits & 0x00000001u) {
-      set_has_text();
-      text_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.text_);
-    }
-    if (cached_has_bits & 0x00000002u) {
-      timestamp_ = from.timestamp_;
-    }
-    _has_bits_[0] |= cached_has_bits;
+  if (from.has_text()) {
+    set_has_text();
+    text_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.text_);
   }
 }
 
@@ -560,7 +489,6 @@ void Event::Swap(Event* other) {
 void Event::InternalSwap(Event* other) {
   using std::swap;
   text_.Swap(&other->text_);
-  swap(timestamp_, other->timestamp_);
   swap(_has_bits_[0], other->_has_bits_[0]);
   _internal_metadata_.Swap(&other->_internal_metadata_);
   swap(_cached_size_, other->_cached_size_);
@@ -910,7 +838,7 @@ Response::Response(const Response& from)
 
 void Response::SharedCtor() {
   _cached_size_ = 0;
-  kind_ = 1;
+  kind_ = 0;
 }
 
 Response::~Response() {
@@ -951,7 +879,7 @@ void Response::Clear() {
   (void) cached_has_bits;
 
   events_.Clear();
-  kind_ = 1;
+  kind_ = 0;
   _has_bits_.Clear();
   _internal_metadata_.Clear();
 }
@@ -966,7 +894,7 @@ bool Response::MergePartialFromCodedStream(
     tag = p.first;
     if (!p.second) goto handle_unusual;
     switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
-      // optional .rrepro.Response.Kind kind = 2 [default = BAD];
+      // optional .rrepro.Response.Kind kind = 2 [default = OK];
       case 2: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
             static_cast< ::google::protobuf::uint8>(16u /* 16 & 0xFF */)) {
@@ -1024,7 +952,7 @@ void Response::SerializeWithCachedSizes(
   (void) cached_has_bits;
 
   cached_has_bits = _has_bits_[0];
-  // optional .rrepro.Response.Kind kind = 2 [default = BAD];
+  // optional .rrepro.Response.Kind kind = 2 [default = OK];
   if (cached_has_bits & 0x00000001u) {
     ::google::protobuf::internal::WireFormatLite::WriteEnum(
       2, this->kind(), output);
@@ -1052,7 +980,7 @@ void Response::SerializeWithCachedSizes(
   (void) cached_has_bits;
 
   cached_has_bits = _has_bits_[0];
-  // optional .rrepro.Response.Kind kind = 2 [default = BAD];
+  // optional .rrepro.Response.Kind kind = 2 [default = OK];
   if (cached_has_bits & 0x00000001u) {
     target = ::google::protobuf::internal::WireFormatLite::WriteEnumToArray(
       2, this->kind(), target);
@@ -1094,7 +1022,7 @@ size_t Response::ByteSizeLong() const {
     }
   }
 
-  // optional .rrepro.Response.Kind kind = 2 [default = BAD];
+  // optional .rrepro.Response.Kind kind = 2 [default = OK];
   if (has_kind()) {
     total_size += 1 +
       ::google::protobuf::internal::WireFormatLite::EnumSize(this->kind());

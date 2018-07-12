@@ -25,14 +25,19 @@ Client::Client(QWidget* parent) : QDialog(parent), connectToServerButton(new QPu
                 quitButton(new QPushButton(tr("Quit"))),
                 getEventsButton(new QPushButton(tr("Get Events"))), sendEventButton(
                 new QPushButton(tr("Send Event"))), event_des_PlainTextEdit(new QPlainTextEdit), events_table(
-                new QTableWidget), hostLineEdit(new QLineEdit), portLineEdit(new QLineEdit), connected(false), socket(
+                new QTableWidget), hostLineEdit(new QLineEdit), portLineEdit(new QLineEdit),con_to_server(new QDialog(this)), connected(false), socket(
                 new QTcpSocket(this)) {
 
-    in.setDevice(socket);
+
 
     setSigSlots();
     setUpGUI();
     setUpNetConf();
+
+
+
+
+
 
 }
 
@@ -187,6 +192,8 @@ void Client::sessionOpened() {
  */
 void Client::connectToServer(QHostAddress address, int port) {
 
+
+
     socket->abort();
     socket->connectToHost(address, port); //TODO time out support.
 
@@ -202,17 +209,14 @@ void Client::connectToServer(QHostAddress address, int port) {
  */
 void Client::askForEvents() {
 
-    rrepro::Request request;
+    QHostAddress address;
+    address.setAddress(hostLineEdit->placeholderText());
+    auto port = portLineEdit->placeholderText().toInt();
 
-    //Kind is GET to fetch all events.
-    request.set_kind(rrepro::Request::GET);
+    connectToServer(address, port);
 
-    std::string output;
-    request.SerializeToString(&output);
-    std::cout << "sendRequest with binary data: " << output;
-    socket->write(output.data());
 
-    getEventsButton->setEnabled(false);
+
 
 }
 
@@ -262,7 +266,19 @@ void Client::displayState(QAbstractSocket::SocketState socketState) {
  */
 void Client::onConnected() {
 
+    rrepro::Request request;
+
+    //Kind is GET to fetch all events.
+    request.set_kind(rrepro::Request::GET);
+
+    std::string output;
+    request.SerializeToString(&output);
+    std::cout << "sendRequest with binary data: " << output;
+    socket->write(output.data());
+
     std::cout << "Connection was established!" << std::endl;
+
+    statusLabel->setText("Connected");
     getEventsButton->setEnabled(true);
     sendEventButton->setEnabled(true);
 
@@ -290,21 +306,24 @@ void Client::setUpGUI() {
     statusLabel = new QLabel(tr("Make sure you are connected to the server. "));
 
     getEventsButton->setDefault(true);
-    getEventsButton->setEnabled(false);
     sendEventButton->setEnabled(false);
 
 
+
+
     auto buttonBox = new QDialogButtonBox;
-    buttonBox->addButton(getEventsButton, QDialogButtonBox::ActionRole);
     buttonBox->addButton(connectToServerButton, QDialogButtonBox::ActionRole);
-    buttonBox->addButton(quitButton, QDialogButtonBox::ActionRole);
-
-    auto buttonBox2 = new QDialogButtonBox;
-    buttonBox2->addButton(sendEventButton, QDialogButtonBox::ActionRole);
-
-
+    buttonBox->addButton(sendEventButton, QDialogButtonBox::ActionRole);
     buttonBox->addButton(quitButton, QDialogButtonBox::RejectRole);
+
+    auto buttonBox2 = new QDialogButtonBox; //for connection dialog 🌀
+    buttonBox2->addButton(getEventsButton, QDialogButtonBox::ActionRole);
+
+
+
+
     QGridLayout* mainLayout = nullptr;
+    QGridLayout* connectLoginLayout = nullptr;
 
     QGridLayout* event_creat_layout = nullptr;
     QGridLayout* connect_server_layout = nullptr;
@@ -312,6 +331,7 @@ void Client::setUpGUI() {
 
 
     mainLayout = new QGridLayout(this);
+    connectLoginLayout = new QGridLayout(con_to_server);
     connect_server_layout = new QGridLayout;
     event_creat_layout = new QGridLayout;
     event_table_layout = new QGridLayout;
@@ -322,7 +342,7 @@ void Client::setUpGUI() {
 
     event_table_layout->addWidget(events_table);
 
-    event_creat_layout->addWidget(buttonBox2, 1, 0);
+    event_creat_layout->addWidget(buttonBox, 1, 0);
     event_creat_layout->addWidget(event_des_PlainTextEdit, 0, 0);
 
     event_des_PlainTextEdit->setWindowTitle("Event description");
@@ -331,12 +351,15 @@ void Client::setUpGUI() {
     connect_server_layout->addWidget(hostLineEdit, 0, 1);
     connect_server_layout->addWidget(portLabel, 1, 0);
     connect_server_layout->addWidget(portLineEdit, 1, 1);
-    //connect_server_layout->addWidget(statusLabel, 2, 0, 1, 2); //TODO find a place to statusLable.
-    connect_server_layout->addWidget(buttonBox, 3, 0, 1, 2);
+    connect_server_layout->addWidget(statusLabel, 2, 0, 1, 2); //TODO find a place to statusLable.
+    connect_server_layout->addWidget(buttonBox2, 3, 0, 1, 2);
+
+    QString status = "Not connected";
+    statusLabel->setText(std::move(status));
 
 
     mainLayout->addLayout(event_creat_layout, 0, 1);
-    mainLayout->addLayout(connect_server_layout, 0, 0);
+    connectLoginLayout->addLayout(connect_server_layout, 0, 0);
     mainLayout->addLayout(event_table_layout, 0, 2);
 
     setWindowTitle(QGuiApplication::applicationDisplayName());
@@ -387,7 +410,6 @@ void Client::setUpNetConf() {
         networkSession = new QNetworkSession(config, this);
         connect(networkSession, &QNetworkSession::opened, this, &Client::sessionOpened);
 
-        getEventsButton->setEnabled(false);
         statusLabel->setText(tr("Opening network session."));
         networkSession->open();
     }
@@ -403,7 +425,6 @@ void Client::onSendEvent() {
 
     rrepro::Event event;
     event.set_text(event_des_PlainTextEdit->toPlainText().toStdString());
-    //event.Prio
 
     //add to table
     QTableWidgetItem* text = new QTableWidgetItem(tr("%1").arg(QString::fromStdString(event.text())));
@@ -433,11 +454,7 @@ void Client::onConnectToServer() {
     std::cerr << "onConnectToServer()" << std::endl;
 #endif
 
-    QHostAddress address;
-    address.setAddress(hostLineEdit->placeholderText());
-    auto port = portLineEdit->placeholderText().toInt();
-
-    connectToServer(address, port);
+    con_to_server -> show();
 
 }
 

@@ -68,26 +68,6 @@ extern ResponseDefaultTypeInternal _Response_default_instance_;
 }  // namespace rrepro
 namespace rrepro {
 
-enum Event_Priority {
-  Event_Priority_ONE = 0,
-  Event_Priority_TWO = 1,
-  Event_Priority_THREE = 2
-};
-bool Event_Priority_IsValid(int value);
-const Event_Priority Event_Priority_Priority_MIN = Event_Priority_ONE;
-const Event_Priority Event_Priority_Priority_MAX = Event_Priority_THREE;
-const int Event_Priority_Priority_ARRAYSIZE = Event_Priority_Priority_MAX + 1;
-
-const ::google::protobuf::EnumDescriptor* Event_Priority_descriptor();
-inline const ::std::string& Event_Priority_Name(Event_Priority value) {
-  return ::google::protobuf::internal::NameOfEnum(
-    Event_Priority_descriptor(), value);
-}
-inline bool Event_Priority_Parse(
-    const ::std::string& name, Event_Priority* value) {
-  return ::google::protobuf::internal::ParseNamedEnum<Event_Priority>(
-    Event_Priority_descriptor(), name, value);
-}
 enum Request_Kind {
   Request_Kind_GET = 0,
   Request_Kind_ADD = 1
@@ -215,34 +195,6 @@ class Event : public ::google::protobuf::Message /* @@protoc_insertion_point(cla
 
   // nested types ----------------------------------------------------
 
-  typedef Event_Priority Priority;
-  static const Priority ONE =
-    Event_Priority_ONE;
-  static const Priority TWO =
-    Event_Priority_TWO;
-  static const Priority THREE =
-    Event_Priority_THREE;
-  static inline bool Priority_IsValid(int value) {
-    return Event_Priority_IsValid(value);
-  }
-  static const Priority Priority_MIN =
-    Event_Priority_Priority_MIN;
-  static const Priority Priority_MAX =
-    Event_Priority_Priority_MAX;
-  static const int Priority_ARRAYSIZE =
-    Event_Priority_Priority_ARRAYSIZE;
-  static inline const ::google::protobuf::EnumDescriptor*
-  Priority_descriptor() {
-    return Event_Priority_descriptor();
-  }
-  static inline const ::std::string& Priority_Name(Priority value) {
-    return Event_Priority_Name(value);
-  }
-  static inline bool Priority_Parse(const ::std::string& name,
-      Priority* value) {
-    return Event_Priority_Parse(name, value);
-  }
-
   // accessors -------------------------------------------------------
 
   // optional string text = 1;
@@ -260,25 +212,15 @@ class Event : public ::google::protobuf::Message /* @@protoc_insertion_point(cla
   ::std::string* release_text();
   void set_allocated_text(::std::string* text);
 
-  // optional int32 timestamp = 2;
-  bool has_timestamp() const;
-  void clear_timestamp();
-  static const int kTimestampFieldNumber = 2;
-  ::google::protobuf::int32 timestamp() const;
-  void set_timestamp(::google::protobuf::int32 value);
-
   // @@protoc_insertion_point(class_scope:rrepro.Event)
  private:
   void set_has_text();
   void clear_has_text();
-  void set_has_timestamp();
-  void clear_has_timestamp();
 
   ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
   ::google::protobuf::internal::HasBits<1> _has_bits_;
   mutable int _cached_size_;
   ::google::protobuf::internal::ArenaStringPtr text_;
-  ::google::protobuf::int32 timestamp_;
   friend struct ::protobuf_Request_5fResponse_2eproto::TableStruct;
   friend void ::protobuf_Request_5fResponse_2eproto::InitDefaultsEventImpl();
 };
@@ -559,7 +501,7 @@ class Response : public ::google::protobuf::Message /* @@protoc_insertion_point(
   const ::google::protobuf::RepeatedPtrField< ::rrepro::Event >&
       events() const;
 
-  // optional .rrepro.Response.Kind kind = 2 [default = BAD];
+  // optional .rrepro.Response.Kind kind = 2 [default = OK];
   bool has_kind() const;
   void clear_kind();
   static const int kKindFieldNumber = 2;
@@ -653,30 +595,6 @@ inline void Event::set_allocated_text(::std::string* text) {
   // @@protoc_insertion_point(field_set_allocated:rrepro.Event.text)
 }
 
-// optional int32 timestamp = 2;
-inline bool Event::has_timestamp() const {
-  return (_has_bits_[0] & 0x00000002u) != 0;
-}
-inline void Event::set_has_timestamp() {
-  _has_bits_[0] |= 0x00000002u;
-}
-inline void Event::clear_has_timestamp() {
-  _has_bits_[0] &= ~0x00000002u;
-}
-inline void Event::clear_timestamp() {
-  timestamp_ = 0;
-  clear_has_timestamp();
-}
-inline ::google::protobuf::int32 Event::timestamp() const {
-  // @@protoc_insertion_point(field_get:rrepro.Event.timestamp)
-  return timestamp_;
-}
-inline void Event::set_timestamp(::google::protobuf::int32 value) {
-  set_has_timestamp();
-  timestamp_ = value;
-  // @@protoc_insertion_point(field_set:rrepro.Event.timestamp)
-}
-
 // -------------------------------------------------------------------
 
 // Request
@@ -764,7 +682,7 @@ inline void Request::set_allocated_event(::rrepro::Event* event) {
 
 // Response
 
-// optional .rrepro.Response.Kind kind = 2 [default = BAD];
+// optional .rrepro.Response.Kind kind = 2 [default = OK];
 inline bool Response::has_kind() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
@@ -775,7 +693,7 @@ inline void Response::clear_has_kind() {
   _has_bits_[0] &= ~0x00000001u;
 }
 inline void Response::clear_kind() {
-  kind_ = 1;
+  kind_ = 0;
   clear_has_kind();
 }
 inline ::rrepro::Response_Kind Response::kind() const {
@@ -834,11 +752,6 @@ Response::events() const {
 namespace google {
 namespace protobuf {
 
-template <> struct is_proto_enum< ::rrepro::Event_Priority> : ::google::protobuf::internal::true_type {};
-template <>
-inline const EnumDescriptor* GetEnumDescriptor< ::rrepro::Event_Priority>() {
-  return ::rrepro::Event_Priority_descriptor();
-}
 template <> struct is_proto_enum< ::rrepro::Request_Kind> : ::google::protobuf::internal::true_type {};
 template <>
 inline const EnumDescriptor* GetEnumDescriptor< ::rrepro::Request_Kind>() {
